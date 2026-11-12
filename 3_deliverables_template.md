@@ -379,7 +379,7 @@ valve-state = { v: 0 / 1 }          ; 0 = closed, 1 = open
 | 10           |   -78          |    -80         |    4        |        6    |
 | 20           |     -94        |     -99        |     30      |        37   |
 
-> **Testing note:** Measurements were taken indoors at a fixed TX power of 0 dBm. With a clear line of sight the signal remained strong; walls or obstacles between the boards caused a sharp drop in RSSI and more packet loss. The 5 m values were calculated by logarithmic interpolation between the 1 m and 10 m measurements. The test ends at 20 m, where PER is already above 10 %.
+> **Testing note:** Measurements were taken indoors at a fixed TX power of 0 dBm. With a clear line of sight the signal remained strong; walls or obstacles between the boards caused a sharp drop in RSSI and more packet loss.
 
 ### Lab 2: 6LoWPAN Mesh & Resilience Baseline Data
 
