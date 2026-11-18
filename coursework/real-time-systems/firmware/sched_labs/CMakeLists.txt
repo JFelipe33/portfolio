@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.20.0)
+find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+project(sched_labs)
+
+target_sources(app PRIVATE src/main.c src/instr.c src/burn.c)
+target_sources_ifdef(CONFIG_SCHED_LAB_RM  app PRIVATE src/lab06.c)
+target_sources_ifdef(CONFIG_SCHED_LAB_EDF app PRIVATE src/lab06.c)
+target_sources_ifdef(CONFIG_SCHED_LAB_NOLOCK    app PRIVATE src/lab06_inversion.c)
+target_sources_ifdef(CONFIG_SCHED_LAB_INVERSION app PRIVATE src/lab06_inversion.c)
+target_sources_ifdef(CONFIG_SCHED_LAB_PI        app PRIVATE src/lab06_inversion.c)

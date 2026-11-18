@@ -1,0 +1,19 @@
+config LAB_FLASH_CACHE_OFF
+	bool "Run with the STM32L4 ART instruction/data cache disabled"
+	depends on SOC_SERIES_STM32L4X
+	help
+	  Week 2's second measurement: identical binary, cache off, so the jitter
+	  difference is attributable to the flash accelerator alone. Pair it with
+	  CONFIG_STM32_FLASH_PREFETCH=n to drop the prefetch buffer too.
+
+config LAB06_JITTER_MAX_MS
+	int "Lab 06 Task C: maximum artificial delay before actuating (ms)"
+	default 0
+	range 0 50
+	help
+	  Each control cycle waits a pseudo-random whole number of milliseconds in
+	  [0, N] before it writes the valve duty. 0 compiles the injection out, so
+	  the N = 0 build is the unmodified loop. The e-stop path is never delayed.
+	  Build with: west build ... -- -DCONFIG_LAB06_JITTER_MAX_MS=<N>
+
+source "Kconfig.zephyr"

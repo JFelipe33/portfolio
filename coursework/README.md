@@ -5,7 +5,7 @@ Entregables de cursos universitarios, una carpeta por curso.
 | Carpeta | Curso | Código | Contenido |
 |---|---|---|---|
 | [iot-systems-design/](iot-systems-design/) | IoT Systems Design | 4201327 | DDR de los labs |
-| [real-time-systems/](real-time-systems/) | Real-Time Systems | 4101137 | RET y script de RTA |
+| [real-time-systems/](real-time-systems/) | Real-Time Systems | 4101137 | Informes de los labs 01–06, firmware Zephyr y scripts de análisis |
 
 Las dos carpetas conservan el historial completo de sus repositorios originales
 (JFelipe33/IOT y JFelipe33/Real-Time-Systems-): `git log -- coursework/<curso>` lo muestra.

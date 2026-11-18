@@ -17,7 +17,7 @@ Proyectos de ingeniería: hardware, firmware, IoT, sistemas en tiempo real, soft
 | Curso | Código | Contenido |
 |---|---|---|
 | [IoT Systems Design](coursework/iot-systems-design/) | 4201327 | DDR de los labs |
-| [Real-Time Systems](coursework/real-time-systems/) | 4101137 | RET y script de RTA |
+| [Real-Time Systems](coursework/real-time-systems/) | 4101137 | Informes de los labs 01–06, firmware Zephyr y scripts de análisis |
 
 Detalle: [`coursework/`](coursework/).
 
