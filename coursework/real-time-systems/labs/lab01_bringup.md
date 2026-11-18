@@ -42,11 +42,3 @@ west build -p auto -b nucleo_l476rg zephyr/samples/basic/blinky && west flash -r
 Hello World! SoilSense Bring-up verified by Javier Muñoz
 Board: nucleo_l476rg | Iteration cycle < 1 min DEMONSTRATED.
 ```
-
-## §4 Automatización e Infraestructura Out-of-Tree Desarrollada
-Como mejora técnica al proceso de Bring-up, se desarrolló un repositorio de infraestructura independiente para automatización:
-* Repositorio de automatización: JavierAndresMunozAriza/lab01_bringup
-* Aportes clave desarrollados:
-  * Out-of-Tree Workflow: Separación limpia entre el código de aplicación y el código fuente de Zephyr.
-  * Abstracción Devicetree: Uso de alias portables (led0, sw0) para ejecutar el mismo binario en STM32 y ESP32-C6.
-  * Automatización en VS Code: Integración de atajos de teclado **(.vscode/tasks.json)** para compilación y monitoreo serial automático con **tio /dev/ttyACM0**.
