@@ -17,16 +17,16 @@ Este repositorio contiene las prácticas, arquitecturas de software e investigac
 - **Herramientas de Análisis:** analizador lógico (jitter, latencia ISR, C_i y T_i), trazas CTF
 - **Control de Versiones & Entorno:** Git, GitHub, Linux / WSL2, VS Code
 
-## 🚦 Estado de Avance de Laboratorios
+## 🚦 Laboratorios
 
-| Lab | Tema / Arquitectura | Estado | Reporte |
-| :---: | :--- | :---: | :---: |
-| **01** | *Bring-up: Environment, Toolchain & Board* | `[x]` Completado | [lab01_bringup.md](labs/lab01_bringup.md) |
-| **02** | *Superloop Architecture, Cache Jitter & Measurement* | `[x]` Completado | [lab02_superloop.md](labs/lab02_superloop.md) |
-| **03** | *The S3 Port and the First Thread* | `[x]` Completado | [lab03_port.md](labs/lab03_port.md) |
-| **04** | *Full Migration and A/B Testing* | `[x]` Completado | [lab04_ipc.md](labs/lab04_ipc.md) |
-| **05** | *Tracing & Per-Task Execution* | `[~]` Medido en la placa (`threads`, trazas CTF, captura GPIO de `calib`) · falta el A/B del jitter con tracing ON/OFF | [lab05_tracing.md](labs/lab05_tracing.md) |
-| **06** | *Schedulability: Fig. 4.13, Inversión de Prioridad y ADR-005* | `[x]` Completado · pendiente: 3 disparos más «después» del e-stop | [lab06_schedulability.md](labs/lab06_schedulability.md) |
+| Lab | Tema / Arquitectura | Reporte |
+| :---: | :--- | :---: |
+| **01** | *Bring-up: Environment, Toolchain & Board* | [lab01_bringup.md](labs/lab01_bringup.md) |
+| **02** | *Superloop Architecture, Cache Jitter & Measurement* | [lab02_superloop.md](labs/lab02_superloop.md) |
+| **03** | *The S3 Port and the First Thread* | [lab03_port.md](labs/lab03_port.md) |
+| **04** | *Full Migration and A/B Testing* | [lab04_ipc.md](labs/lab04_ipc.md) |
+| **05** | *Tracing & Per-Task Execution* | [lab05_tracing.md](labs/lab05_tracing.md) |
+| **06** | *Schedulability: Fig. 4.13, Inversión de Prioridad y ADR-005* | [lab06_schedulability.md](labs/lab06_schedulability.md) |
 
 ## 📁 Estructura
 

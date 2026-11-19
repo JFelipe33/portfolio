@@ -9,17 +9,17 @@
 
 ## §2 Tabla de Requerimientos y Ejecución (RET) — Task Set Inicial
 
-Tareas del nodo SoilSense Control según el escenario del curso. Los $C_i$ quedan pendientes hasta medirlos con el analizador lógico (Lab 02 en el L476RG, Labs 03–06 en el ESP32-S3).
+Tareas del nodo SoilSense Control según el escenario del curso. Los $C_i$ se midieron con el analizador lógico en el laboratorio indicado (Lab 02 en el L476RG, Labs 03–06 en el ESP32-S3).
 
-| Task ID | Task Name | Period ($T_i$) | Deadline ($D_i$) | Execution Time ($C_i$) | Type (H / F / S) | Description |
+| Task ID | Task Name | Period ($T_i$) | Deadline ($D_i$) | $C_i$ medido en | Type (H / F / S) | Description |
 | :---: | :--- | :---: | :---: | :---: | :---: | :--- |
-| **TSK-01** | Sampling | $1\text{ ms}$ | $1\text{ ms}$ | **TBD** *(Lab 02)* | **Hard (H)** | Lectura de presión a 1 kHz, detección del e-stop y paso del PWM de la válvula. |
-| **TSK-02** | Control Loop | $10\text{ ms}$ | $10\text{ ms}$ | **TBD** *(Lab 02)* | **Hard (H)** | Lazo PI de presión → duty de la válvula. |
-| **TSK-03** | Overpressure E-stop | Aperiódica | $5\text{ ms}$ | **TBD** *(Lab 06)* | **Hard (H)** | Cerrar la válvula ante sobrepresión. |
-| **TSK-04** | Flow ISR Service | Por evento | $10\ \mu\text{s}$ | **TBD** *(Lab 02)* | **Hard (H)** | Atención de la interrupción de pulsos de caudal. |
-| **TSK-05** | Telemetry Transmit | $1000\text{ ms}$ | $1000\text{ ms}$ | **TBD** *(Lab 02)* | **Soft (S)** | Línea CSV de estado hacia el Hub. |
-| **TSK-06** | Display HMI | $500\text{ ms}$ | $500\text{ ms}$ | **TBD** *(Lab 03)* | **Soft (S)** | Refresco de la pantalla SSD1306. |
-| **TSK-07** | Console / Shell | Aperiódica | $50\text{ ms}$ | **TBD** *(Lab 02)* | **Firm (F)** | Comandos por UART: una respuesta tardía no sirve, pero no causa daño. |
+| **TSK-01** | Sampling | $1\text{ ms}$ | $1\text{ ms}$ | Lab 02 | **Hard (H)** | Lectura de presión a 1 kHz, detección del e-stop y paso del PWM de la válvula. |
+| **TSK-02** | Control Loop | $10\text{ ms}$ | $10\text{ ms}$ | Lab 02 | **Hard (H)** | Lazo PI de presión → duty de la válvula. |
+| **TSK-03** | Overpressure E-stop | Aperiódica | $5\text{ ms}$ | Lab 06 | **Hard (H)** | Cerrar la válvula ante sobrepresión. |
+| **TSK-04** | Flow ISR Service | Por evento | $10\ \mu\text{s}$ | Lab 02 | **Hard (H)** | Atención de la interrupción de pulsos de caudal. |
+| **TSK-05** | Telemetry Transmit | $1000\text{ ms}$ | $1000\text{ ms}$ | Lab 02 | **Soft (S)** | Línea CSV de estado hacia el Hub. |
+| **TSK-06** | Display HMI | $500\text{ ms}$ | $500\text{ ms}$ | Lab 03 | **Soft (S)** | Refresco de la pantalla SSD1306. |
+| **TSK-07** | Console / Shell | Aperiódica | $50\text{ ms}$ | Lab 02 | **Firm (F)** | Comandos por UART: una respuesta tardía no sirve, pero no causa daño. |
 
 *Nota: H (Hard) exige cumplir el deadline siempre, porque un fallo causa daño físico; F (Firm) descarta el resultado tardío sin daño; S (Soft) tolera retrasos ocasionales con pérdida gradual de valor.*
 

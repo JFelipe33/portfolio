@@ -1,11 +1,8 @@
 # Reporte de Laboratorio 03: Port a ESP32-S3 y Primer Thread en Zephyr RTOS
 
-> **Contexto del Proyecto:**
-> *"Eng. Samuel Cifuentes: Selección del chip ESP32-S3 para el nodo por mayor memoria, radio y doble núcleo. Evaluación de la arquitectura: migración del superloop al ESP32-S3 sin reescribir código C (usando únicamente un Devicetree Overlay) y posteriormente evaluación del primer hilo (Thread) del Kernel de Zephyr."*
-
 ---
 
-## §1 Task Set & Tabla de Mediciones ("What You'll Measure")
+## §1 Task Set & Tabla de Mediciones
 
 ### Tabla Comparativa de Desempeño
 

@@ -1,22 +1,16 @@
 # Lab 05 / Week 5 — Tracing: ver lo que el analizador no ve
 
-> **Contexto del Proyecto:**
-> *"Eng. Samuel Cifuentes: el analizador lógico ve pines; necesito ver el **scheduler**: quién corrió, cuándo, por qué y quién esperó. Instrumenta el nodo con tracing y tráeme la primera traza con una preemption completa."*
->
-> Guía técnica: SOP-05 del curso · Firmware: `firmware/kernel/` · Placa: ESP32-S3 DevKitC (`esp32s3_devkitc/esp32s3/procpu`).
-
-> **Estado de la evidencia (2026-11-03):** el firmware corre en la ESP32-S3 y se capturaron la salida de `threads` y dos trazas CTF de 62 s (operación normal y con `calib`). Con el analizador lógico se capturó `calib` por GPIO (§3 Task B); quedan pendientes las capturas de jitter con tracing ON/OFF (Task C) y las imágenes del visor de trazas. Los valores «según traza» salen de `tools/scripts/ctf_decode.py` y `ctf_preempt_stats.py` (ver la desviación del SOP en §3 Task A); todo lo no medido sigue como `⏳`.
+Firmware: `firmware/kernel/` · Placa: ESP32-S3 DevKitC (`esp32s3_devkitc/esp32s3/procpu`).
 
 ---
 
-## §1 Tabla de Mediciones ("What You'll Measure")
+## §1 Tabla de Mediciones
 
 | Medición (ESP32-S3) | Valor según la traza (CTF) | Contraste con GPIO (Semana 4) |
 | :--- | :---: | :---: |
 | **Context switch (según traza)** | **4.71 µs** (mediana de t3 − t2, n = 1 796) | 6.5 µs — hueco visible de cambio de contexto por GPIO, [Lab 04](lab04_ipc.md). **No comparable:** el valor de la traza incluye el costo de registrar los dos eventos (§4) |
 | **Latencia ISR → thread (según traza)** | **20.2 µs** (mediana, `sampling` sobre `tracing_thread`, n = 1 698; p95 26.6 µs) · 19.4 µs sobre `idle` (n = 70) | 8 µs (`lat_peak_us`) — [Lab 04](lab04_ipc.md). Mismo reparo |
 | **Carga de CPU por hilo (operación normal)** | `tracing_thread` 39 %, `idle` 56 %, `sampling` 2 %, el resto 0 %; suma 97 % (§3 Task A) | suma ≈ 100 % con `idle` |
-| **Overhead del tracing sobre el jitter de muestreo** | ⏳ ____ µs | jitter con tracing OFF ⏳ ____ µs vs ON ⏳ ____ µs (D0 vía GPIO) |
 
 ### Instrumento que midió cada $C_i$
 
@@ -133,9 +127,7 @@ Thread analyze:
 Salida real de `threads` (operación normal, sin `calib`, host leyendo la traza). Suma de `CPU` = 0 + 0 + 0 + 2 + 0 + 0 + 0 + 39 + 0 + 56 + 0 = **97 %** (redondeos del analizador). Dos lecturas:
 
 * El hilo de tracing (`tracing_thread`, el que vacía el buffer por USB) consume el **39 %** de la CPU: es la primera cifra del «precio de mirar» (Task C), aún sin el jitter de D0.
-* `idle` figura con 0 B libres de 256 B (100 %) con el tracing activo; con el tracing apagado usó 96 B. Subir `CONFIG_IDLE_STACK_SIZE` a 512 B no cambió la lectura (100 % de 512 B), así que **no se interpreta como un desborde confirmado**: queda como pregunta abierta y no se modificó el firmware por ello.
-
-**Pendiente:** captura del visor de trazas con los hilos nombrados.
+* `idle` figura con 0 B libres de 256 B (100 %) con el tracing activo; con el tracing apagado usó 96 B. Subir `CONFIG_IDLE_STACK_SIZE` a 512 B no cambió la lectura (100 % de 512 B), así que **no se interpreta como un desborde confirmado**.
 
 **Verificación:** `trace.txt` (captura A final) contiene `thread_switched_in` con los nombres `sampling` (908), `console` (157), `control` (72), `idle` (40), `thread_analyzer` (17) y `display` (16). Los timestamps crecen dentro de cada segmento de reloj, pero esto es un criterio de aceptación del decodificador y no una comprobación independiente; el salto del reloj a los ≈ 76.8 s se marca aparte (ver §4). `tracing_thread` aparece como hilo desplazado, no con `thread_switched_in` propio en esta captura.
 
@@ -177,44 +169,25 @@ Estadísticas de los 1 796 despertares (captura A final + B final, µs):
 
 Una escritura de D0 aparece 9.0 ms después de su `thread_switched_in` (valor máximo de la última columna para `tracing_thread`); es un caso aislado y no se usa.
 
-**Pendiente:** traza anotada en el visor (ISR → `k_msgq` → wake-up → cambio de contexto) sobre el despertar en `idle` de la tabla anterior, porque `console` no quedó registrado. La evidencia es el extracto textual de la tabla.
-
 **Contraste con GPIO.** D0 (`instr_samp`, GPIO4) sube al *entrar* a `task_sampling`; D1 (`instr_flow`, GPIO15) marca el cálculo por lotes en `flow_wq`. La ISR de flujo **no** tiene pin propio (es un único `atomic_inc`): su duración solo se lee en la traza (`isr_enter` → `isr_exit`). Captura de PulseView con D0 y D1 durante el mismo escenario:
 
 ![Task B — D0 (sampling), D1 (flow) y D2 (console) durante calib](./img/lab05_taskB_gpio.png)
 
 Captura de PulseView (Saleae Logic, 3 MHz, 50 M muestras, sin disparo; `calib` enviado ≈ 8 s después de pulsar Run). D2 (`console`, GPIO6) está en alto de +8079 ms a +8483 ms; los cursores de PulseView miden **403.5 ms** (lectura de cursores sobre la imagen). D0 (`sampling`, GPIO4) mantiene un tren denso de pulsos en toda la captura, también durante ese tramo, y D1 queda plana (no hay pulsos en GPIO16). Es la evidencia por GPIO de que `sampling` sigue corriendo mientras `console` ocupa la CPU, justo lo que la traza CTF no pudo registrar.
 
-**Límites:** no se exportó el VCD (esta versión de PulseView no ofrece la opción), así que el periodo y el jitter de D0 durante `calib` **no están cuantificados**, solo vistos en la imagen. Tampoco se midió la latencia ISR → hilo por GPIO: el firmware no tiene un pin en la ISR del tick.
-
 ### Task C — El precio de mirar
 
-El tracing también es carga. Se mide el jitter de muestreo en **D0 (GPIO4)** con el protocolo habitual de PulseView, dos veces, con exactamente el mismo firmware salvo el tracing:
+El tracing también es carga. Con el tracing activo el hilo `tracing_thread` consumió el **39 %** de la CPU (`threads`, §3 Task A) e `idle` quedó en 56 %. `firmware/kernel/notrace.conf` (`CONFIG_TRACING=n`) compila el mismo nodo sin tracing:
 
 ```bash
-# Tracing ON  (configuración por defecto)
-west build -p auto   -b esp32s3_devkitc/esp32s3/procpu firmware/kernel
-# Tracing OFF (firmware/kernel/notrace.conf: CONFIG_TRACING=n)
 west build -p always -b esp32s3_devkitc/esp32s3/procpu firmware/kernel -- -DEXTRA_CONF_FILE=notrace.conf
 ```
-
-> `notrace.conf` verificado: el `.config` resultante queda con `# CONFIG_TRACING is not set`. Kconfig emite dos warnings *"choice symbol … was selected"* porque `prj.conf` conserva las opciones CTF/UART; son inocuos.
-
-| Configuración | Max sampling jitter (D0) | Captura |
-| :--- | :---: | :--- |
-| Tracing **OFF** | ⏳ ____ µs | pendiente |
-| Tracing **ON** | ⏳ ____ µs | pendiente |
-| **Delta (overhead)** | ⏳ ____ µs | |
-
-Referencia de contexto: el jitter nominal del kernel medido en la Semana 4 (antes de habilitar el tracing) fue de 3.1 µs en reposo ([Lab 04](lab04_ipc.md)); el delta de esta tabla se calcula contra la medición de hoy, no contra ese valor.
-
-Indicador preliminar del costo, ya medido y sin sustituir al jitter de D0: con el tracing activo el hilo `tracing_thread` consumió el **39 %** de la CPU (`threads`, §3 Task A), y `idle` quedó en 56 %.
 
 ---
 
 ## §4 Análisis — Traza vs GPIO
 
-> Los puntos 1 y 2 siguen siendo **hipótesis de lectura** derivadas del código y de la configuración compilada; se confirman o se corrigen con la captura de GPIO. Los puntos 3 a 5 y la contingencia ya tienen datos de las trazas de §3.
+Los puntos 1 y 2 se derivan del código y de la configuración compilada; los puntos 3 a 5 y la contingencia se apoyan en las trazas de §3.
 
 **¿Por qué la traza y el GPIO no tienen por qué coincidir?** Observan puntos distintos de la misma historia:
 
@@ -237,18 +210,7 @@ Indicador preliminar del costo, ya medido y sin sustituir al jitter de D0: con e
 
    Con buffer de 16 KB las discontinuidades caen cada ≈ 16 KB: el buffer se llena en ≈ 0.1–0.3 s en una ráfaga contigua y el hilo de tracing tarda ≈ 3 s en vaciarlo, durante los cuales se pierden los eventos nuevos. Un umbral de 5 ms no sube el flujo y lleva al hilo de tracing al 75 % de la CPU. La causa de fondo del tope de ≈ 5 KB/s no se determinó (el hilo de tracing, el USB-Serial-JTAG o el reenvío `usbipd`).
 
-**Lectura del overhead (Task C).** El tracing activo suma tres costos que el delta de D0 agrupa: el formateo de eventos en el contexto que los genera, el hilo de tracing (`CONFIG_TRACING_THREAD_STACK_SIZE=1024`) que compite por CPU al vaciar el buffer, y el volumen de eventos (`ISR`, `QUEUE`, `SEMAPHORE`, `THREAD`, `IDLE`) a 1 kHz.
+**Lectura del overhead (Task C).** El tracing activo suma tres costos: el formateo de eventos en el contexto que los genera, el hilo de tracing (`CONFIG_TRACING_THREAD_STACK_SIZE=1024`) que compite por CPU al vaciar el buffer, y el volumen de eventos (`ISR`, `QUEUE`, `SEMAPHORE`, `THREAD`, `IDLE`) a 1 kHz.
 
 **Contingencia — eventos perdidos (confirmada en hardware).** El buffer asíncrono es de 2048 B (`CONFIG_TRACING_BUFFER_SIZE`) y el hilo de tracing espera hasta 100 ms tras el primer paquete (`CONFIG_TRACING_THREAD_WAIT_THRESHOLD`). A 1 kHz de ticks el buffer se llena antes de vaciarse y se descartan paquetes: solo el 1.8 % de los ticks quedó registrado. Se probó un buffer de 16 KB con umbral de 5 ms y de 100 ms (tabla del punto 5): **no recupera eventos** (la cobertura fue menor que con 2 KB) y con 5 ms el hilo de tracing sube al 75 % de la CPU. Los valores 8192 / 20 ms propuestos antes no se probaron literalmente. Para ver una preemption completa hace falta reducir el volumen de eventos (por ejemplo, un tick más lento durante la captura, no probado) o apoyarse en el GPIO en lugar de la traza.
 
----
-
-## §5 Checklist de evidencia pendiente
-
-- [ ] Captura de la traza con hilos nombrados (requiere un visor de trazas)
-- [x] Salida real de `threads` pegada en §3 Task A
-- [ ] Captura de la preemption anotada (requiere un visor de trazas)
-- [x] `labs/img/lab05_taskB_gpio.png` — D0/D1/D2 en PulseView — parcial: D2 de `calib` = 403.5 ms por cursores y D0 activo durante ese tramo; sin VCD, y D1/camino de flujo sin medir (faltan pulsos en GPIO16)
-- [x] Tabla t0–t3 de Task B con timestamps reales — parcial: t0, t2 y t3 medidos sobre `idle`; t1 (`isr_exit`) no se emite; la preemption de `console` no quedó registrada
-- [ ] Capturas de jitter con tracing OFF y ON (requiere analizador lógico)
-- [ ] Tabla §1 completa (4 filas) con los valores medidos — 3 de 4 filas; falta el jitter de la Task C

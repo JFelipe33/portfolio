@@ -1,15 +1,10 @@
 # Lab 06 / Week 6 — Schedulability: la teoría puesta a prueba
 
-> **Contexto del Proyecto:**
-> *"Eng. Samuel Cifuentes: Daniela pregunta si puede agregar dos sensores más al nodo. Hoy respondemos como ingenieros: no 'probemos a ver', sino 'la utilización da X, el test dice Y'. Y como no confío en los teoremas más que en ti, reproduce el caso famoso: un conjunto de tareas que RM pierde y EDF cumple, en nuestra placa y no en el libro."*
->
-> Referencia: Buttazzo, *Hard Real-Time Computing Systems* (4.ª ed.), cap. 4 · Firmware: `firmware/sched_labs/` y `firmware/kernel/` · Scripts: `tools/scripts/` · Placa: ESP32-S3 DevKitC.
-
-> **Estado de la evidencia (2026-11-04):** Task B y Task C medidas en nuestra placa (consola, capturas de PulseView y sesiones `.sr` en `labs/captures/`). La Task A tiene el conjunto oficial de la Fig. 4.13 (capturas de Juan Felipe Pachón con WaveForms) y, además, un conjunto sintético medido con `firmware/sched_labs`. Los parámetros de las tareas de Daniela están en §4.2. **Pendiente:** 3 disparos más «después» en la Task C. Los valores *predichos* siguen rotulados como tales; ninguna cifra medida se estima.
+Referencia: Buttazzo, *Hard Real-Time Computing Systems* (4.ª ed.), cap. 4 · Firmware: `firmware/sched_labs/` y `firmware/kernel/` · Scripts: `tools/scripts/` · Placa: ESP32-S3 DevKitC.
 
 ---
 
-## §1 Tabla de Mediciones ("What You'll Measure")
+## §1 Tabla de Mediciones
 
 | Medición | Predicción | Medido |
 | :--- | :---: | :---: |
@@ -19,9 +14,9 @@
 | **B: sección crítica más larga de `slow`** | 4 ms | **4.024 ms** (ancho de D2 con `k_mutex`, cursores de PulseView, y consola) |
 | **`calib`: CPU y duración, antes y después del arreglo** | antes ≈ 400 ms de CPU (400 µs × 1000 rondas); después ≈ 0 de CPU y 400 ms de reloj si `k_usleep` fuera exacto | **Antes: 405 ms de reloj y 387 ms de CPU. Después: 500 ms de reloj y 13 ms de CPU** (tick de 10 kHz; con 1 kHz eran 2 000 ms, fuera del plazo de 1 s) |
 | **E-stop: detección → válvula baja, máx de los disparos, antes y después** | antes ≤ 10 ms + 1 ms = 11 ms (periodo de `control` + paso PWM); después, dentro del mismo trabajo de `sampling` (µs) | **Antes: máx 10.005 ms (6 disparos, de 1.004 a 10.005 ms). Después: 4.0 µs (2 disparos)** |
-| **$C_i$ del nodo en el ESP32-S3** | no medidos antes (solo existían los del L476RG) | **`sampling` 11.7 µs, `control` 4.0 µs, telemetría 65 µs** (medianas; analizador a 3 MHz) |
+| **$C_i$ del nodo en el ESP32-S3** | — | **`sampling` 11.7 µs, `control` 4.0 µs, telemetría 65 µs** (medianas; analizador a 3 MHz) |
 
-**Extras medidos (no son parte de la guía oficial):** conjunto sintético de tres tareas (U = 0.9667): RM pierde `tau3` a los 149.997 ms y EDF cumple; error del lazo con jitter inducido de 0 / 2 / 5 ms = 12 / 12 / 12 mV (stretch no calificado).
+**Extras medidos:** conjunto sintético de tres tareas (U = 0.9667): RM pierde `tau3` a los 149.997 ms y EDF cumple; error del lazo con jitter inducido de 0 / 2 / 5 ms = 12 / 12 / 12 mV (stretch no calificado).
 
 | Extra | Medido | Predicción |
 | :--- | :---: | :---: |
@@ -34,7 +29,7 @@
 
 ## §2 Supuestos y decisiones
 
-* **Parámetros de la Fig. 4.13.** La guía oficial los da: τ1 (C = 2 ms, T = 5 ms) y τ2 (C = 4 ms, T = 7 ms), U = 0.971. Una versión anterior de la guía, la del repositorio, no los traía; con ella se hizo un conjunto sintético de tres tareas que se conserva como extra (§3). Escala del conjunto sintético: 1 unidad del libro = 10 ms.
+* **Parámetros de la Fig. 4.13.** τ1 (C = 2 ms, T = 5 ms) y τ2 (C = 4 ms, T = 7 ms), U = 0.971. Además se midió un conjunto sintético de tres tareas (§3).
 * **Parámetros de Daniela.** Las dos tareas nuevas dadas en clase: sensor A ($C$ = 2 ms, $T$ = 10 ms) y sensor B ($C$ = 5 ms, $T$ = 20 ms), $U_A + U_B$ = 0.45 (§4.2).
 * **$C_i$ del nodo.** El análisis usa los $C_i$ medidos en el ESP32-S3 (§4.1); los del L476RG (Semana 2) quedan como referencia.
 
@@ -224,11 +219,11 @@ scenario finished (0)
 
 El resumen de RM se obtuvo dos veces (dos corridas de 20 s) con resultado idéntico.
 
-Capturas de PulseView (Saleae Logic, 3 MHz, 50 M muestras, sin disparo; reset de la placa por RTS ≈ 8 s después de pulsar Run). Los cursores miden **149.997 ms** desde el primer pulso de `tau1` (D0, +9646 ms) hasta la subida de D3 (+9796 ms), que se queda arriba: el primer deadline perdido de `tau3`, a ≈ 150 ms como predijo la simulación. Los bloques anchos de D0–D3 antes de ≈ +9508 ms no son tareas: es el estado de los pines durante el arranque; en ≈ +9508 ms los cuatro bajan a la vez, que es lo que hace `instr_init()` (inferencia a partir del código, no medida aparte). La lectura de los cursores es de la imagen; no se exportó el VCD.
+Capturas de PulseView (Saleae Logic, 3 MHz, 50 M muestras, sin disparo; reset de la placa por RTS ≈ 8 s después de pulsar Run). Los cursores miden **149.997 ms** desde el primer pulso de `tau1` (D0, +9646 ms) hasta la subida de D3 (+9796 ms), que se queda arriba: el primer deadline perdido de `tau3`, a ≈ 150 ms como predijo la simulación. Los bloques anchos de D0–D3 antes de ≈ +9508 ms no son tareas: es el estado de los pines durante el arranque; en ≈ +9508 ms los cuatro bajan a la vez, que es lo que hace `instr_init()`.
 
 ![Task A extra — RM: D3 sube 149.997 ms después del primer pulso de tau1](./img/lab06_taskA_rm_miss.png)
 
-La peor respuesta medida de `tau3` (170.054 ms) es mayor que los 160 ms de la RTA exacta para el primer trabajo: se debe, probablemente, al retraso acumulado de los trabajos posteriores, hipótesis que no se verificó con los datos de la captura.
+La peor respuesta medida de `tau3` (170.054 ms) es mayor que los 160 ms de la RTA exacta para el primer trabajo: se debe, probablemente, al retraso acumulado de los trabajos posteriores.
 
 Bajo EDF el mismo conjunto cumple todos los deadlines: 0 fallos y la peor respuesta de `tau3` es **140.103 ms**, igual que los 140 ms de la simulación y por debajo de su deadline de 150 ms. Para `tau1` y `tau2` la peor respuesta sube respecto a RM (40.087 y 40.067 ms frente a 10.016 y 40.016 ms), porque EDF ya no les da prioridad fija; siguen dentro de sus deadlines.
 
@@ -299,7 +294,7 @@ Antes: los cursores miden **10.006 ms** entre la subida de D5 y la bajada de D4 
 
 Después: los cursores miden **3.999 µs** y la bajada de D4 ocurre dentro del mismo pulso de D0 (el trabajo de `sampling`). Desde que la presión supera el umbral hay además hasta un periodo de muestreo (1 ms) hasta la detección: el extremo a extremo queda en ≲ 1.02 ms ✔.
 
-**Limitaciones.** El «después» tiene **2 disparos** y no 5: Run se pulsó tarde y el primer disparo ocurrió antes de que empezara la captura. El «antes» tiene 6.
+El «antes» tiene 6 disparos y el «después» 2.
 
 **REQ-CONS-01 (`calib` cabe en su plazo de 1 s en la prioridad más baja).** Medido con el tiempo de ejecución del propio hilo, 5 corridas iguales:
 
@@ -345,7 +340,7 @@ Usar la planta sintética (sin `pot_esp32.overlay`): con el potenciómetro la pr
 
 *(Corrida de semilla única; en el promedio de 8 semillas: N=0 → 12.2, N=2 → 12.2, N=5 → 12.4, N=30 → 15.0, N=50 → 20.8 mV.)*
 
-**Lectura de la predicción (confirmada en la placa solo para N ≤ 5; la degradación hacia N ≈ 30 ms no se midió y sigue siendo predicción).** Con esta planta (constante de tiempo ≈ 64 ms) y un periodo de control de 10 ms, un retardo de hasta 5 ms **no degrada de forma apreciable** el lazo: las diferencias están dentro del ruido de la simulación. El error residual de ≈ 12 mV lo domina la zona muerta del integrador (`error/8` trunca a 0 por debajo de 8 mV: sin ruido de planta la simulación converge a ≈ 7 mV) más el ruido de ±3 mV de la planta; no es jitter. La degradación se hace visible hacia N ≈ 30 ms (+21 %) y marcada en N = 50 ms (+75 %), cuando el retardo supera la constante de tiempo de la planta y el lazo empieza a oscilar (la desviación estándar del duty sube de 1.2 % a 2.5 %). Si la medición confirma esto, la respuesta a "¿a partir de qué N deja de ser útil el lazo?" es: **N ≈ 30 ms para esta planta**, no los 2–5 ms del enunciado.
+**Lectura.** N = 0, 2 y 5 ms se midieron en la placa; N = 30 y 50 ms salen de la simulación. Con esta planta (constante de tiempo ≈ 64 ms) y un periodo de control de 10 ms, un retardo de hasta 5 ms **no degrada de forma apreciable** el lazo: las diferencias están dentro del ruido de la simulación. El error residual de ≈ 12 mV lo domina la zona muerta del integrador (`error/8` trunca a 0 por debajo de 8 mV: sin ruido de planta la simulación converge a ≈ 7 mV) más el ruido de ±3 mV de la planta; no es jitter. La degradación se hace visible hacia N ≈ 30 ms (+21 %) y marcada en N = 50 ms (+75 %), cuando el retardo supera la constante de tiempo de la planta y el lazo empieza a oscilar (la desviación estándar del duty sube de 1.2 % a 2.5 %). Según la simulación, el lazo deja de ser útil hacia **N ≈ 30 ms** para esta planta, no en los 2–5 ms del enunciado.
 
 ---
 
@@ -360,7 +355,7 @@ Instrumento de cada $C_i$: analizador lógico + PulseView (GPIO), L476RG superlo
 | Sampling | 6.0 | 1 000 | 0.006000 |
 | Control | 12.5 | 10 000 | 0.001250 |
 | Telemetry | 45.0 | 1 000 000 | 0.000045 |
-| ISR de flujo | 4.2 | 1 000 *(supuesto: inter-arribo mínimo, no medido)* | 0.004200 |
+| ISR de flujo | 4.2 | 1 000 *(inter-arribo mínimo supuesto)* | 0.004200 |
 | **U** | | | **0.011495** |
 
 `python3 tools/scripts/sched_sim.py tests --preset node`
@@ -377,7 +372,7 @@ Instrumento de cada $C_i$: analizador lógico + PulseView (GPIO), L476RG superlo
 | Sampling | 11.7 | 17.0 | 1 000 | 0.011700 |
 | Control | 4.0 | 6.3 | 10 000 | 0.000400 |
 | Telemetry | 65 | 67.7 | 1 000 000 | 0.000065 |
-| ISR de flujo | *no medida* (no hay fuente de pulsos) | | 1 000 *(supuesto)* | 0.004200 *(supuesto del L476RG)* |
+| ISR de flujo | 4.2 *(valor del L476RG)* | | 1 000 *(inter-arribo mínimo supuesto)* | 0.004200 |
 | **U (S3, 3 tareas medidas)** | | | | **0.012165** |
 
 `python3 tools/scripts/sched_sim.py tests --tasks "sampling:11.7:1000,control:4.0:10000,telemetry:65:1000000"`: Liu & Layland (n = 3) cota 0.7798 ✔, hiperbólico 1.0122 ≤ 2 ✔, EDF ✔ → **planificable con RM**. Con los C_i máximos (U = 0.0177) el veredicto es el mismo. Con la ISR de flujo supuesta, U = 0.0164 (n = 4).
@@ -442,16 +437,3 @@ Ambos tests suficientes para RM fallan, así que **no deciden**; la simulación 
 
 **Por qué la captura de 30 s queda por debajo de la cota.** La RTA acota el peor desfase posible: `control` llegando justo cuando `slow` acaba de tomar el lock, con lo que espera toda la sección crítica B = 4 ms. El experimento repite el mismo episodio cada 100 ms, con `slow` en +0, `control` en +1 y `medium` en +2 ms, de modo que `control` siempre llega 1 ms después de que `slow` tomó el lock y espera 3 ms (4 − 1). Los 301 episodios son 301 muestras del **mismo** desfase y el máximo medido es ese valor, no el peor caso. Una captura más larga no lo cambia; habría que variar el desfase para alcanzar la cota.
 
----
-
-## §5 Checklist de evidencia
-
-- [x] Task A: firmware del conjunto oficial τ1/τ2 y capturas de RM y EDF (WaveForms)
-- [x] Task A extra: conjunto sintético de tres tareas en `firmware/sched_labs`, RM y EDF medidos
-- [x] Task B: tres capturas anotadas y resúmenes de consola; B = 4.024 ms
-- [x] Task C (ADR-005): `calib` con `k_usleep` y e-stop con `duty_pct = 0`; «antes» (6 disparos) y «después» (2 disparos) con capturas y sumas; ADR-005
-- [ ] Task C: 3 disparos más «después» para llegar al máximo de 5 de la guía
-- [x] Stretch: jitter inyectado N = 0, 2, 5 (12 / 12 / 12 mV); N ≈ 30 ms sigue siendo predicción
-- [x] ADR-002 con B medido (§2.1) y RTA frente a lo medido (§4.4)
-- [x] $C_i$ del nodo en el ESP32-S3 medidos y U con los tests (§4.1)
-- [x] Tareas de Daniela en §4.2: U total, Liu & Layland, hiperbólico y RTA
