@@ -208,6 +208,7 @@ valve-state = { v: 0 / 1 }          ; 0 = closed, 1 = open
    The OTBR works at the network layer (Layer 3 IPv6 routing), not at the application layer. Only the network and link headers change (compressed IPv6 in 802.15.4 frames inside the mesh, full IPv6 in 802.11 frames on Wi-Fi); the UDP payload with the CoAP message and its CBOR bytes is forwarded unchanged.
 4. **Why should a mains-powered gateway turn Wi-Fi power save off, when a battery node would do the opposite?**  
    With power save on, the Wi-Fi receiver sleeps between beacons, and packets wait until it wakes up; we measured 267 ms with power save on against 15 ms with it off. A mains-powered gateway does not need to save energy, so it should favor low latency. A battery-powered node must favor battery life, so it accepts the extra latency.
+   
 ## 6. Performance Baselines
  
 | Metric | Target | Measured | Status |
